@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#102a46">
+  <title>Customer Support People Hub</title>
+  <link rel="preconnect" href="https://i.imgur.com">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div id="loader" class="loader" aria-live="polite">
+    <div class="loader-orbits">
+      <span class="orbit orbit-a"></span>
+      <span class="orbit orbit-b"></span>
+      <div class="loader-logo">
+        <img src="https://i.imgur.com/sksZ1Hq.jpg" alt="Company logo">
+      </div>
+    </div>
+    <div class="loader-track"><span></span></div>
+    <p>Loading People Hub</p>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo">
+        <img id="brandLogo" src="https://i.imgur.com/sksZ1Hq.jpg" alt="Company logo">
+      </div>
+      <div>
+        <strong id="companyName">Customer Support</strong>
+        <span>People Hub</span>
+      </div>
+    </div>
+
+    <button id="refreshBtn" class="top-btn" type="button">
+      <span class="refresh-icon">↻</span>
+      Refresh
+    </button>
+  </header>
+
+  <main class="shell">
+    <section class="overview-card">
+      <div class="overview-title">
+        <div>
+          <p class="eyebrow">TEAM DIRECTORY</p>
+          <h1>Employees</h1>
+          <p class="subtitle">Select an employee to view their title and job description.</p>
+        </div>
+
+        <div class="summary-grid">
+          <article class="summary-card">
+            <small>Total Employees</small>
+            <strong id="sumTotal">0</strong>
+            <span id="sumActive">0 active</span>
+          </article>
+
+          <article class="summary-card">
+            <small>Management</small>
+            <strong id="sumManagement">0</strong>
+            <span>Manager + Assistant</span>
+          </article>
+
+          <article class="summary-card">
+            <small>QA Team</small>
+            <strong id="sumQA">0</strong>
+            <span>Including Head of QA</span>
+          </article>
+
+          <article class="summary-card">
+            <small>Team Leaders</small>
+            <strong id="sumLeaders">0</strong>
+            <span>Active team leaders</span>
+          </article>
+
+          <article class="summary-card">
+            <small>Supervisors</small>
+            <strong id="sumSupervisors">0</strong>
+            <span>Supervisor / KYC</span>
+          </article>
+
+          <article class="summary-card">
+            <small>Support Agents</small>
+            <strong id="sumAgents">0</strong>
+            <span>Active support agents</span>
+          </article>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <label class="search-box">
+          <span>⌕</span>
+          <input id="searchInput" type="search" placeholder="Search name, title, team, manager...">
+        </label>
+
+        <select id="titleFilter">
+          <option value="">All job titles</option>
+        </select>
+
+        <select id="teamFilter">
+          <option value="">All teams</option>
+        </select>
+
+        <select id="managerFilter">
+          <option value="">All managers</option>
+        </select>
+
+        <select id="statusFilter">
+          <option value="ACTIVE">Active</option>
+          <option value="NOT ACTIVE">Not active</option>
+          <option value="ALL">All statuses</option>
+        </select>
+
+        <button id="hireSortBtn" class="hire-sort-btn" data-mode="CUSTOM" type="button" title="Sort by hire date">
+          <span>↕</span>
+          <b id="hireSortLabel">Hire Date</b>
+        </button>
+
+        <button id="clearBtn" class="clear-btn" type="button">Clear</button>
+      </div>
+
+      <div class="result-line">
+        <span id="resultCount">0 employees</span>
+      </div>
+    </section>
+
+    <section>
+      <div id="employeeGrid" class="employee-grid"></div>
+
+      <div id="emptyState" class="empty-state hidden">
+        <strong>No employees found</strong>
+        <span>Try another search or filter.</span>
+      </div>
+    </section>
+  </main>
+
+  <button id="orgButton" class="org-button" type="button" title="Open organization chart">
+    <span class="org-ring ring-one"></span>
+    <span class="org-ring ring-two"></span>
+    <span class="org-logo">
+      <img id="orgButtonLogo" src="https://i.imgur.com/sksZ1Hq.jpg" alt="">
+    </span>
+  </button>
+
+  <div id="backdrop" class="backdrop hidden"></div>
+
+  <section id="employeeModal" class="modal employee-modal hidden" aria-hidden="true">
+    <button class="modal-close" type="button" data-close>×</button>
+    <div id="employeeModalBody"></div>
+  </section>
+
+  <section id="orgModal" class="modal org-modal hidden" aria-hidden="true">
+    <button class="modal-close" type="button" data-close>×</button>
+    <div class="org-modal-head">
+      <div>
+        <small>ORGANIZATION</small>
+        <strong>Customer Support Department</strong>
+      </div>
+    </div>
+    <div class="org-image-stage">
+      <img id="orgImage" alt="Customer Support organization chart">
+      <div id="orgImageFallback" class="image-fallback hidden">
+        <strong>Organization chart unavailable</strong>
+        <span>Check ORG_IMAGE_URL in the Settings sheet.</span>
+      </div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
