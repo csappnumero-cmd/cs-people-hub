@@ -140,10 +140,12 @@ function updateSummary() {
     `${active.length} active · ${state.employees.length - active.length} inactive`;
 
   $("#sumManagement").textContent =
-    countTitle("Customer Support Manager") + countTitle("Assistant of CS Manager");
+    countTitle("Head of Customer Support Center") +
+    countTitle("Assistant of CS Manager") +
+    countTitle("Head of Quality Assurance Team");
 
   $("#sumQA").textContent =
-    countTitle("Head of QA Team") + countTitle("QA Team");
+    countTitle("Quality Assurance Officer");
 
   $("#sumLeaders").textContent =
     active.filter(e => String(e.jobTitle || "").includes("Team Leader")).length;
