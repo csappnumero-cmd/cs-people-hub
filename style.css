@@ -183,33 +183,52 @@ h1{
   gap:9px;
 }
 .summary-card{
-  min-height:100px;
-  padding:13px 14px;
-  border-radius:18px;
-  border:1px solid #dce6ef;
-  background:linear-gradient(180deg,#fbfdff 0%,#f2f7fb 100%);
-  box-shadow:0 9px 22px rgba(12,38,62,.04);
+  position:relative;
+  min-height:116px;
+  padding:15px 15px 14px;
+  overflow:hidden;
+  border-radius:19px;
+  border:1px solid #d8e4ee;
+  background:linear-gradient(155deg,#ffffff 0%,#f3f8fc 100%);
+  box-shadow:0 10px 24px rgba(12,38,62,.055);
+}
+.summary-card::after{
+  content:"";
+  position:absolute;
+  left:15px;
+  right:15px;
+  bottom:0;
+  height:3px;
+  border-radius:99px 99px 0 0;
+  background:linear-gradient(90deg,var(--primary),#4d86b7,var(--accent));
+  opacity:.72;
 }
 .summary-card small{
   display:block;
-  color:#7c8fa2;
+  min-height:20px;
+  color:#6f8498;
   font-size:8px;
   font-weight:900;
-  letter-spacing:.12em;
+  letter-spacing:.13em;
+  line-height:1.25;
   text-transform:uppercase;
 }
 .summary-card strong{
   display:block;
-  margin-top:9px;
-  font-size:29px;
-  line-height:1;
-  letter-spacing:-.04em;
+  margin-top:7px;
+  color:var(--primary);
+  font-size:34px;
+  font-weight:850;
+  line-height:.95;
+  letter-spacing:-.055em;
 }
 .summary-card span{
   display:block;
-  margin-top:8px;
-  color:#60758a;
-  font-size:10px;
+  min-height:27px;
+  margin-top:9px;
+  color:#62788d;
+  font-size:9.5px;
+  font-weight:600;
   line-height:1.35;
 }
 

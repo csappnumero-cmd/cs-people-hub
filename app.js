@@ -151,7 +151,13 @@ function updateSummary() {
     active.filter(e => String(e.jobTitle || "").includes("Team Leader")).length;
 
   $("#sumSupervisors").textContent = countTitle("Supervisor / KYC");
-  $("#sumAgents").textContent = countTitle("Support Agent");
+
+  // Support Team = Support Agent + Technical Customer Support Expert
+  //                + Senior technical issues specialist
+  $("#sumAgents").textContent =
+    countTitle("Support Agent") +
+    countTitle("Technical Customer Support Expert") +
+    countTitle("Senior technical issues specialist");
 }
 
 function buildFilters() {
