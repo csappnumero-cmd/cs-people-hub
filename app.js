@@ -131,33 +131,48 @@ function applySettings() {
 }
 
 function updateSummary() {
-  // Category cards intentionally count ACTIVE employees only.
+  // Summary cards count ACTIVE employees only.
+  // Which job titles belong to each card is controlled from the Settings sheet.
   const active = state.employees.filter(e => normalizeStatus(e.status) === "ACTIVE");
-  const countTitle = title => active.filter(e => e.jobTitle === title).length;
+  const settings = state.data?.settings || {};
+  const groups = settings.summaryGroups || {};
+
+  const countGroup = rules => active.filter(employee =>
+    titleMatchesAny(employee.jobTitle, Array.isArray(rules) ? rules : [])
+  ).length;
 
   $("#sumTotal").textContent = state.employees.length;
   $("#sumActive").textContent =
     `${active.length} active · ${state.employees.length - active.length} inactive`;
 
-  $("#sumManagement").textContent =
-    countTitle("Head of Customer Support Center") +
-    countTitle("Assistant of CS Manager") +
-    countTitle("Head of Quality Assurance Team");
+  $("#sumManagement").textContent = countGroup(groups.management);
+  $("#sumQA").textContent = countGroup(groups.quality);
+  $("#sumLeaders").textContent = countGroup(groups.teamLeaders);
+  $("#sumSupervisors").textContent = countGroup(groups.supervisors);
+  $("#sumAgents").textContent = countGroup(groups.supportTeam);
+}
 
-  $("#sumQA").textContent =
-    countTitle("Quality Assurance Officer");
+function titleMatchesAny(jobTitle, rules) {
+  const title = String(jobTitle || "").trim().toLowerCase();
+  if (!title) return false;
 
-  $("#sumLeaders").textContent =
-    active.filter(e => String(e.jobTitle || "").includes("Team Leader")).length;
+  return rules.some(rule => {
+    const raw = String(rule || "").trim().toLowerCase();
+    if (!raw) return false;
 
-  $("#sumSupervisors").textContent = countTitle("Supervisor / KYC");
+    // Optional wildcard support: *Team Leader* matches any title containing Team Leader.
+    if (raw.startsWith("*") && raw.endsWith("*") && raw.length > 2) {
+      return title.includes(raw.slice(1, -1));
+    }
+    if (raw.startsWith("*") && raw.length > 1) {
+      return title.endsWith(raw.slice(1));
+    }
+    if (raw.endsWith("*") && raw.length > 1) {
+      return title.startsWith(raw.slice(0, -1));
+    }
 
-  // Support Team = Support Agent + Technical Customer Support Expert
-  //                + Senior technical issues specialist
-  $("#sumAgents").textContent =
-    countTitle("Support Agent") +
-    countTitle("Technical Customer Support Expert") +
-    countTitle("Senior technical issues specialist");
+    return title === raw;
+  });
 }
 
 function buildFilters() {
@@ -176,7 +191,7 @@ function buildFilters() {
   populateSelect(
     "#managerFilter",
     "All managers",
-    unique(state.employees.map(e => e.manager).filter(Boolean))
+    unique(state.employees.map(e => e.directManager || e.manager).filter(Boolean))
   );
 }
 
@@ -203,13 +218,13 @@ function renderEmployees() {
     .map((employee, originalIndex) => ({ employee, originalIndex }))
     .filter(({ employee:e }) => {
       const haystack = [
-        e.name,e.jobTitle,e.team,e.manager,e.email,e.location,e.hireDate,e.notes
+        e.name,e.jobTitle,e.team,e.directManager,e.functionalReportingTo,e.email,e.location,e.hireDate,e.notes
       ].join(" ").toLowerCase();
 
       return (!search || haystack.includes(search))
         && (!title || e.jobTitle === title)
         && (!team || e.team === team)
-        && (!manager || e.manager === manager)
+        && (!manager || (e.directManager || e.manager) === manager)
         && (status === "ALL" || normalizeStatus(e.status) === status);
     });
 
@@ -258,9 +273,10 @@ function employeeCard(e, originalIndex) {
     ? `<img src="${escapeAttr(photo)}" alt="" onerror="this.remove()">`
     : escapeHtml(initials(e.name));
 
+  const directManager = e.directManager || e.manager || "";
   const chips = [
     e.team,
-    e.manager ? `Manager: ${e.manager}` : ""
+    directManager ? `Direct Manager: ${directManager}` : ""
   ].filter(Boolean)
    .map(value => `<span class="chip">${escapeHtml(value)}</span>`)
    .join("");
@@ -296,6 +312,8 @@ function openEmployee(e) {
     : escapeHtml(initials(e.name));
 
   const points = Array.isArray(e.jobDescription) ? e.jobDescription : [];
+  const directManager = e.directManager || e.manager || "";
+  const reportingLabel = state.data?.settings?.functionalReportingColumn || "Functional Reporting To";
 
   $("#employeeModalBody").innerHTML = `
     <div class="profile-head">
@@ -308,7 +326,7 @@ function openEmployee(e) {
           <div class="profile-badges">
             <span class="profile-badge">${escapeHtml(normalizeStatus(e.status))}</span>
             ${e.team ? `<span class="profile-badge">${escapeHtml(e.team)}</span>` : ""}
-            ${e.manager ? `<span class="profile-badge">Manager: ${escapeHtml(e.manager)}</span>` : ""}
+            ${directManager ? `<span class="profile-badge">Direct Manager: ${escapeHtml(directManager)}</span>` : ""}
           </div>
         </div>
       </div>
@@ -325,7 +343,7 @@ function openEmployee(e) {
         ${infoCard("Job Title", e.jobTitle || "—")}
         ${infoCard("Hire Date", e.hireDate || "—")}
         ${infoCard("Location", e.location || "—")}
-        ${infoCard("Manager", e.manager || "—")}
+        ${infoCard(reportingLabel, e.functionalReportingTo || "—")}
         ${infoCard("Email", e.email || "—")}
       </div>
 
