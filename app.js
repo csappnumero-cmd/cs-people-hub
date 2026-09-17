@@ -152,24 +152,37 @@ function updateSummary() {
   $("#sumAgents").textContent = countGroup(groups.supportTeam);
 }
 
+function normalizeJobTitle(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/\s*\/\s*/g, " / ")
+    .replace(/\s*-\s*/g, " - ");
+}
+
 function titleMatchesAny(jobTitle, rules) {
-  const title = String(jobTitle || "").trim().toLowerCase();
+  const title = normalizeJobTitle(jobTitle);
   if (!title) return false;
 
   return rules.some(rule => {
-    const raw = String(rule || "").trim().toLowerCase();
+    const originalRule = String(rule || "").trim();
+    if (!originalRule) return false;
+
+    const startsWildcard = originalRule.startsWith("*");
+    const endsWildcard = originalRule.endsWith("*");
+
+    const ruleText = originalRule
+      .replace(/^\*+/, "")
+      .replace(/\*+$/, "");
+
+    const raw = normalizeJobTitle(ruleText);
     if (!raw) return false;
 
-    // Optional wildcard support: *Team Leader* matches any title containing Team Leader.
-    if (raw.startsWith("*") && raw.endsWith("*") && raw.length > 2) {
-      return title.includes(raw.slice(1, -1));
-    }
-    if (raw.startsWith("*") && raw.length > 1) {
-      return title.endsWith(raw.slice(1));
-    }
-    if (raw.endsWith("*") && raw.length > 1) {
-      return title.startsWith(raw.slice(0, -1));
-    }
+    // Wildcards remain supported, but spaces/case around titles no longer matter.
+    if (startsWildcard && endsWildcard) return title.includes(raw);
+    if (startsWildcard) return title.endsWith(raw);
+    if (endsWildcard) return title.startsWith(raw);
 
     return title === raw;
   });
