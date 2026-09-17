@@ -1,4 +1,5 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzYwh_6I2iQXgxujpWuRzCflOKelTaqSoqI4eML9cQF7QNZ3O4jBcy28ffvXZV5amGK/exec";
+const LOCAL_CACHE_KEY = "cs_people_hub_fast_cache_v8";
 
 const state = {
   data: null,
@@ -13,7 +14,16 @@ document.addEventListener("DOMContentLoaded", init);
 
 function init() {
   bindEvents();
-  loadData();
+
+  // Show the last good data immediately, then refresh quietly in the background.
+  const cached = readLocalData();
+  if (cached) {
+    applyData(cached);
+    setLoading(false, false);
+    loadData(false, true);
+  } else {
+    loadData(false, false);
+  }
 }
 
 function bindEvents() {
@@ -58,11 +68,17 @@ function bindEvents() {
   });
 }
 
-async function loadData(manual = false) {
-  setLoading(true);
+async function loadData(manual = false, background = false) {
+  const showFullLoader = !background && !state.data && !manual;
+  setLoading(true, showFullLoader);
 
   try {
-    const url = API_URL + (API_URL.includes("?") ? "&" : "?") + "_=" + Date.now();
+    const params = [];
+    if (manual) params.push("refresh=1");
+    params.push("_=" + Date.now());
+
+    const url = API_URL + (API_URL.includes("?") ? "&" : "?") + params.join("&");
+
     const response = await fetch(url, {
       method: "GET",
       cache: "no-store",
@@ -77,20 +93,51 @@ async function loadData(manual = false) {
       throw new Error("Unexpected API response.");
     }
 
-    state.data = data;
-    state.employees = data.employees.slice();
-
-    applySettings();
-    buildFilters();
-    updateSummary();
-    renderEmployees();
+    applyData(data);
+    writeLocalData(data);
 
     if (manual) toast("Data refreshed");
   } catch (error) {
     console.error(error);
-    showLoadError(error);
+
+    // If cached data is already on screen, do not block the user with an error state.
+    if (!state.data) showLoadError(error);
+    else if (manual) toast("Refresh failed — showing saved data");
   } finally {
-    setLoading(false);
+    setLoading(false, false);
+  }
+}
+
+function applyData(data) {
+  state.data = data;
+  state.employees = data.employees.slice();
+
+  applySettings();
+  buildFilters();
+  updateSummary();
+  renderEmployees();
+}
+
+function readLocalData() {
+  try {
+    const raw = localStorage.getItem(LOCAL_CACHE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || parsed.success !== true || !Array.isArray(parsed.employees)) return null;
+
+    return parsed;
+  } catch (error) {
+    console.warn("Local cache could not be read.", error);
+    return null;
+  }
+}
+
+function writeLocalData(data) {
+  try {
+    localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data));
+  } catch (error) {
+    console.warn("Local cache could not be saved.", error);
   }
 }
 
@@ -324,7 +371,9 @@ function openEmployee(e) {
     ? `<img src="${escapeAttr(photo)}" alt="">`
     : escapeHtml(initials(e.name));
 
-  const points = Array.isArray(e.jobDescription) ? e.jobDescription : [];
+  const points = Array.isArray(e.jobDescription)
+    ? e.jobDescription
+    : (state.data?.jobDescriptions?.[e.jobTitle] || []);
   const directManager = e.directManager || e.manager || "";
   const reportingLabel = state.data?.settings?.functionalReportingColumn || "Functional Reporting To";
 
@@ -461,9 +510,14 @@ function normalizeStatus(value) {
   return ["NOT ACTIVE","INACTIVE","LEFT","RESIGNED"].includes(text) ? "NOT ACTIVE" : "ACTIVE";
 }
 
-function setLoading(show) {
-  $("#refreshBtn").classList.toggle("is-loading",show);
-  $("#loader").classList.toggle("is-hidden",!show);
+function setLoading(show, fullScreen = false) {
+  $("#refreshBtn").classList.toggle("is-loading", show);
+
+  if (show && fullScreen) {
+    $("#loader").classList.remove("is-hidden");
+  } else {
+    $("#loader").classList.add("is-hidden");
+  }
 }
 
 function showLoadError(error) {
